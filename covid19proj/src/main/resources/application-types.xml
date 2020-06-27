@@ -1,0 +1,79 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="InputRawData" format="json">
+      <types:shape format="weave" example="examples/data-1.json"><![CDATA[%dw 2.0
+
+type InputRawData = {|
+  raw_data: Array<{|    agebracket: String,     backupnotes: String,     contractedfromwhichpatientsuspected: String,     currentstatus: String,     dateannounced: String,     detectedcity: String,     detecteddistrict: String,     detectedstate: String,     estimatedonsetdate: String,     gender: String,     nationality: String,     notes: String,     numcases: String,     patientnumber: String,     source1: String,     source2: String,     source3: String,     statecode: String,     statepatientnumber: String,     statuschangedate: String,     typeoftransmission: String  |}>
+|} {"example": "{\\\"raw_data\\\":[{\\\"agebracket\\\":\\\"20\\\",\\\"backupnotes\\\":\\\"Student from Wuhan\\\",\\\"contractedfromwhichpatientsuspected\\\":\\\"\\\",\\\"currentstatus\\\":\\\"Recovered\\\",\\\"dateannounced\\\":\\\"30\\/01\\/2020\\\",\\\"detectedcity\\\":\\\"Thrissur\\\",\\\"detecteddistrict\\\":\\\"Thrissur\\\",\\\"detectedstate\\\":\\\"Kerala\\\",\\\"estimatedonsetdate\\\":\\\"\\\",\\\"gender\\\":\\\"F\\\",\\\"nationality\\\":\\\"India\\\",\\\"notes\\\":\\\"Travelled from Wuhan\\\",\\\"numcases\\\":\\\"1\\\",\\\"patientnumber\\\":\\\"1\\\",\\\"source1\\\":\\\"https:\\/\\/twitter.com\\/vijayanpinarayi\\/status\\/1222819465143832577\\\",\\\"source2\\\":\\\"https:\\/\\/weather.com\\/en-IN\\/india\\/news\\/news\\/2020-02-14-kerala-defeats-coronavirus-indias-three-covid-19-patients-successfully\\\",\\\"source3\\\":\\\"\\\",\\\"statecode\\\":\\\"KL\\\",\\\"statepatientnumber\\\":\\\"KL-TS-P1\\\",\\\"statuschangedate\\\":\\\"14\\/02\\/2020\\\",\\\"typeoftransmission\\\":\\\"Imported\\\"},{\\\"agebracket\\\":\\\"\\\",\\\"backupnotes\\\":\\\"Student from Wuhan\\\",\\\"contractedfromwhichpatientsuspected\\\":\\\"\\\",\\\"currentstatus\\\":\\\"Recovered\\\",\\\"dateannounced\\\":\\\"02\\/02\\/2020\\\",\\\"detectedcity\\\":\\\"Alappuzha\\\",\\\"detecteddistrict\\\":\\\"Alappuzha\\\",\\\"detectedstate\\\":\\\"Kerala\\\",\\\"estimatedonsetdate\\\":\\\"\\\",\\\"gender\\\":\\\"\\\",\\\"nationality\\\":\\\"India\\\",\\\"notes\\\":\\\"Travelled from Wuhan\\\",\\\"numcases\\\":\\\"1\\\",\\\"patientnumber\\\":\\\"2\\\",\\\"source1\\\":\\\"https:\\/\\/www.indiatoday.in\\/india\\/story\\/kerala-reports-second-case-of-coronavirus-1642494-2020-02-02\\\",\\\"source2\\\":\\\"https:\\/\\/weather.com\\/en-IN\\/india\\/news\\/news\\/2020-02-14-kerala-defeats-coronavirus-indias-three-covid-19-patients-successfully\\\",\\\"source3\\\":\\\"\\\",\\\"statecode\\\":\\\"KL\\\",\\\"statepatientnumber\\\":\\\"KL-AL-P1\\\",\\\"statuschangedate\\\":\\\"14\\/02\\/2020\\\",\\\"typeoftransmission\\\":\\\"Imported\\\"},{\\\"agebracket\\\":\\\"\\\",\\\"backupnotes\\\":\\\"Student from Wuhan\\\",\\\"contractedfromwhichpatientsuspected\\\":\\\"\\\",\\\"currentstatus\\\":\\\"Recovered\\\",\\\"dateannounced\\\":\\\"03\\/02\\/2020\\\",\\\"detectedcity\\\":\\\"Kasaragod\\\",\\\"detecteddistrict\\\":\\\"Kasaragod\\\",\\\"detectedstate\\\":\\\"Kerala\\\",\\\"estimatedonsetdate\\\":\\\"\\\",\\\"gender\\\":\\\"\\\",\\\"nationality\\\":\\\"India\\\",\\\"notes\\\":\\\"Travelled from Wuhan\\\",\\\"numcases\\\":\\\"1\\\",\\\"patientnumber\\\":\\\"3\\\",\\\"source1\\\":\\\"https:\\/\\/www.indiatoday.in\\/india\\/story\\/kerala-now-confirms-third-case-of-coronavirus-1642789-2020-02-03\\\",\\\"source2\\\":\\\"https:\\/\\/twitter.com\\/ANI\\/status\\/1224221485805395968?s=20\\\",\\\"source3\\\":\\\"https:\\/\\/weather.com\\/en-IN\\/india\\/news\\/news\\/2020-02-14-kerala-defeats-coronavirus-indias-three-covid-19-patients-successfully\\\",\\\"statecode\\\":\\\"KL\\\",\\\"statepatientnumber\\\":\\\"KL-KS-P1\\\",\\\"statuschangedate\\\":\\\"14\\/02\\/2020\\\",\\\"typeoftransmission\\\":\\\"Imported\\\"}]}"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="jsonResultObject" format="json">
+      <types:shape format="weave" example="examples/jsonResultObject.json"><![CDATA[%dw 2.0
+
+type jsonResultObject = {|
+  data: Array<{|    records: Number {"typeId": "int"},     date: String  |}>
+|} {"example": "{\\\"data\\\":[{\\\"records\\\":20,\\\"date\\\":\\\"01\\/01\\/2020\\\"},{\\\"records\\\":25,\\\"date\\\":\\\"02\\/01\\/2020\\\"}]}"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="dbResult" format="json">
+      <types:shape format="weave" example="examples/dbResult.json"><![CDATA[%dw 2.0
+
+type dbResult = {|
+  agebracket: String, 
+  backupnotes: String, 
+  contractedfromwhichpatientsuspected: String, 
+  currentstatus: String, 
+  dateannounced: String, 
+  detectedcity: String, 
+  detecteddistrict: String, 
+  detectedstate: String, 
+  estimatedonsetdate: String, 
+  gender: String, 
+  nationality: String, 
+  notes: String, 
+  numcases: String, 
+  patientnumber: String, 
+  source1: String, 
+  source2: String, 
+  source3: String, 
+  statecode: String, 
+  statepatientnumber: String, 
+  statuschangedate: String, 
+  typeoftransmission: String
+|} {"example": "{\\\"agebracket\\\":\\\"\\\",\\\"backupnotes\\\":\\\"Student from Wuhan\\\",\\\"contractedfromwhichpatientsuspected\\\":\\\"\\\",\\\"currentstatus\\\":\\\"Recovered\\\",\\\"dateannounced\\\":\\\"02\\/02\\/2020\\\",\\\"detectedcity\\\":\\\"Alappuzha\\\",\\\"detecteddistrict\\\":\\\"Alappuzha\\\",\\\"detectedstate\\\":\\\"Kerala\\\",\\\"estimatedonsetdate\\\":\\\"\\\",\\\"gender\\\":\\\"\\\",\\\"nationality\\\":\\\"India\\\",\\\"notes\\\":\\\"Travelled from Wuhan\\\",\\\"numcases\\\":\\\"1\\\",\\\"patientnumber\\\":\\\"2\\\",\\\"source1\\\":\\\"https:\\/\\/www.indiatoday.in\\/india\\/story\\/kerala-reports-second-case-of-coronavirus-1642494-2020-02-02\\\",\\\"source2\\\":\\\"https:\\/\\/weather.com\\/en-IN\\/india\\/news\\/news\\/2020-02-14-kerala-defeats-coronavirus-indias-three-covid-19-patients-successfully\\\",\\\"source3\\\":\\\"\\\",\\\"statecode\\\":\\\"KL\\\",\\\"statepatientnumber\\\":\\\"KL-AL-P1\\\",\\\"statuschangedate\\\":\\\"14\\/02\\/2020\\\",\\\"typeoftransmission\\\":\\\"Imported\\\"}"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#af220330-9f79-4648-8653-e76208a8f05a">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="InputRawData"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#ca93f134-7254-490c-b184-584e35c5172e">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:message>
+          <types:payload type="jsonResultObject"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#97a0d3bc-7f58-44bc-8eaf-609c453e1116">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="dbResult"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

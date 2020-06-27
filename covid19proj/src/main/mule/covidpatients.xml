@@ -1,0 +1,575 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:java="http://www.mulesoft.org/schema/mule/java" xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd  http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
+    <apikit:config name="covidpatients-config" api="api\covidpatients.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <configuration-properties file="C:\var\application\project\Covid19Proj-dev.properties" />
+    <file:config name="File_Config" doc:name="File Config" doc:id="33cdade8-9d55-4b02-9d69-e17f73a2d110">
+        <file:connection workingDir="C:\var\application\project\" />
+    </file:config>
+    <jms:config name="JMS_Config" doc:name="JMS Config" doc:id="9fc006dd-b431-433d-b014-80c588229073">
+        <jms:active-mq-connection specification="JMS_1_0_2b">
+            <jms:factory-configuration brokerUrl="tcp://localhost:61616" />
+        </jms:active-mq-connection>
+    </jms:config>
+    <db:config name="Database_Config" doc:name="Database Config" doc:id="ce420572-877b-480f-b45d-a34e76678912">
+        <db:my-sql-connection host="${db.host}" port="${db.port}" user="${db.user}" password="${db.password}" database="${db.database}" />
+    </db:config>
+    <http:listener-config name="HTTPListenerconfig" doc:name="HTTP Listener config" doc:id="ee61e558-a870-486c-8a58-471022c233b7">
+        <http:listener-connection host="0.0.0.0" port="8081" />
+    </http:listener-config>
+    <http:request-config name="HTTPREQUEST" doc:name="HTTP Request configuration" doc:id="f953a8a1-4381-4fe8-bc18-9ae4c8cebd76" />
+    <flow name="covidpatients-main">
+        <http:listener config-ref="HTTPListenerconfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="covidpatients-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">400</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Method not allowed"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">405</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not acceptable"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">406</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Unsupported media type"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">415</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not Implemented"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">501</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="covidpatients-console">
+        <http:listener config-ref="HTTPListenerconfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="covidpatients-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="post:\patients\importRawData:application\json:covidpatients-config">
+        <http:request method="GET" doc:name="Request" doc:id="1d84b2a2-9493-45fc-8c37-f2c5b679f39a" config-ref="HTTPREQUEST" url="#[attributes.queryParams.apiDestination]" />
+        <foreach doc:name="For Each" doc:id="84a93552-f2f5-4f68-a040-37e48028dbf4" collection="#[payload.raw_data]">
+            <db:stored-procedure doc:name="Stored procedure" doc:id="f7594e04-dd24-4d23-9f53-0d8e74d309b9" config-ref="Database_Config">
+                <db:sql>call sys.raw_insert_data(:p_agebracket,
+:p_backupnotes,
+:p_contractedfromwhichpatientsuspected,
+:p_currentstatus,
+:p_dateannounced,
+:p_detectedcity,
+:p_detecteddistrict,
+:p_detectedstate,
+:p_estimatedonsetdate,
+:p_gender,
+:p_nationality,
+:p_notes,
+:p_numcases,
+:p_patientnumber,
+:p_source1,
+:p_source2,
+:p_source3,
+:p_statecode,
+:p_statepatientnumber,
+:p_statuschangedate,
+:p_typeoftransmission)</db:sql>
+                <db:input-parameters><![CDATA[#[{p_agebracket:payload.agebracket,
+p_backupnotes:payload.backupnotes,
+p_contractedfromwhichpatientsuspected:payload.contractedfromwhichpatientsuspected,
+p_currentstatus:payload.currentstatus,
+p_dateannounced:payload.dateannounced,
+p_detectedcity:payload.detectedcity,
+p_detecteddistrict:payload.detecteddistrict,
+p_detectedstate:payload.detectedstate,
+p_estimatedonsetdate:payload.estimatedonsetdate,
+p_gender:payload.gender,
+p_nationality:payload.nationality,
+p_notes:payload.notes,
+p_numcases:payload.numcases,
+p_patientnumber:payload.patientnumber,
+p_source1:payload.source1,
+p_source2:payload.source2,
+p_source3:payload.source3,
+p_statecode:payload.statecode,
+p_statepatientnumber:payload.statepatientnumber,
+p_statuschangedate:payload.statuschangedate,
+p_typeoftransmission:payload.typeoftransmission}]]]></db:input-parameters>
+            </db:stored-procedure>
+        </foreach>
+        <ee:transform doc:name="Transform Message" doc:id="f97d6588-bd50-40ac-b79e-8ce515cd937c">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  'status': '1',
+  'data': 'Import Successful',
+  'message': 'Data successfully imported from API'
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <set-payload value="#[payload]" doc:name="Set Payload" doc:id="550333a7-c5b7-4ef2-bf78-a7e6c5533e03" />
+        <logger level="INFO" doc:name="Logger" doc:id="af220330-9f79-4648-8653-e76208a8f05a" message="#[sizeOf(payload.raw_data)]" />
+        <error-handler>
+            <on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="87edfe98-be57-402b-ad9d-55fda48b545e">
+                <file:write doc:name="Write" doc:id="e34fc211-e3eb-408a-8222-58b1a4d3d07f" path="${errorFilePath}" config-ref="File_Config">
+                    <file:content><![CDATA[#[payload.error ++ '\n' as String]]]></file:content>
+                </file:write>
+                <ee:transform doc:name="Transform Message" doc:id="72ad2375-4f65-41b7-b296-d3928a0952ba">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  'errorCode':  '500 Internal Server Error',
+  'errorDescription': 'Failed to import Data',
+  'timestamp': now()
+}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+                <set-payload value="#[payload]" doc:name="Set Payload" doc:id="fb9a2811-4cfb-449f-8ec2-335a58e4433e" />
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="get:\patients\getStatePatientsData\(stateName):covidpatients-config">
+        <set-variable value="#[attributes.uriParams.stateName]" doc:name="Set Variable" doc:id="22e31b3b-1a3d-44eb-8f23-d77b7da6515c" variableName="stateName" />
+        <db:select doc:name="Select" doc:id="edd71a5b-bf3c-48bb-ad4e-d3d5a1ded2eb" config-ref="Database_Config">
+            <db:sql>select count(*) from sys.raw_patients_data_table where statecode = :stateCode</db:sql>
+            <db:input-parameters><![CDATA[#[{stateCode:vars.stateName}]]]></db:input-parameters>
+        </db:select>
+        <ee:transform doc:name="Transform Message" doc:id="702a2623-b26a-47b4-9507-82678dbde94e">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  'status': '1',
+  'data': 'The count from ' ++ vars.stateName as String 
+  ++ ' is: '++ payload[0][0] as String,
+  'message': 'Success'
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <set-payload value="#[payload]" doc:name="Set Payload" doc:id="c476923b-2c1a-4567-bf60-6cdd6b0b4405" />
+        <error-handler>
+            <on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="af280796-8aca-48f6-96f2-d7df6ceb0493">
+                <ee:transform doc:name="Transform Message" doc:id="c9ce5e7b-decb-4d6d-ae36-c4ae2b34f74f">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  'errorCode':  '500 Internal Server Error',
+  'errorDescription': 'Exception',
+  'timestamp': now()
+}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+                <set-payload value="#[payload]" doc:name="Set Payload" doc:id="87122163-371b-4c2f-bc8b-068804ba86c3" />
+            </on-error-continue>
+        </error-handler>
+    </flow>
+    <flow name="post:\patients\importRawData:covidpatients-config">
+        <logger level="INFO" message="post:\patients\importRawData:covidpatients-config" />
+    </flow>
+    <flow name="get:\patients\getStatePatientsData\(stateName)\(cityName):covidpatients-config">
+        <db:select doc:name="Select" doc:id="b2cc2974-6da3-48ba-8b6f-cf4e82d25ea6" config-ref="Database_Config">
+            <db:sql>select count(*) from sys.raw_patients_data_table where statecode = :statecode and detecteddistrict = :detecteddistrict</db:sql>
+            <db:input-parameters><![CDATA[#[{statecode:attributes.uriParams.stateName, detecteddistrict:attributes.uriParams.cityName}]]]></db:input-parameters>
+        </db:select>
+        <ee:transform doc:name="Copy_of_Transform Message" doc:id="544796d5-f73a-4fa3-9842-fd897be3bfd8">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  'status': '1',
+  'data': 'The count is ' ++ payload[0][0] as String,
+  'message': 'Success'
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+        <set-payload value="#[payload]" doc:name="Set Payload" doc:id="158810a2-20b3-4b0f-bb14-280d1ec70c79" />
+        <error-handler>
+            <on-error-continue enableNotifications="true" logException="true" doc:name="Copy_of_On Error Continue" doc:id="25ba815e-d479-42e0-80e1-5696ace37835">
+                <ee:transform doc:name="Copy_of_Transform Message" doc:id="0fd56f0f-91d5-4185-92e5-9c4315b5d55c">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  'errorCode':  '500 Internal Server Error',
+  'errorDescription': 'Exception',
+  'timestamp': now()
+}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+                <set-payload value="#[payload]" doc:name="Copy_of_Set Payload" doc:id="e10471d4-e212-41c7-a533-de0b6a27e9c4" />
+            </on-error-continue>
+        </error-handler>
+    </flow>
+    <flow name="get:\patients\getDatewiseData\(stateName):covidpatients-config">
+        <java:invoke-static doc:name="Invoke static" doc:id="b231c34c-d6ff-4e4d-9332-3f68478534dc" class="covid19proj.CovidJsonUtil" target="dateArray" method="makeArrayofDates()" />
+        <db:select doc:name="Selecting records from DB for particular state" doc:id="024ef2f8-7739-4763-92b3-69334160b02e" config-ref="Database_Config" target="dbResult">
+            <db:sql>select * from sys.raw_patients_data_table where statecode = :stateCode  order by dateannounced asc</db:sql>
+            <db:input-parameters><![CDATA[#[{stateCode:attributes.uriParams.stateName}]]]></db:input-parameters>
+        </db:select>
+        <flow-ref doc:name="Flow Reference" doc:id="475fa22b-ac18-4c2f-b9c2-e6279c63f078" name="GettingRecordsDateWise" />
+        <error-handler>
+            <on-error-continue enableNotifications="true" logException="true" doc:name="Copy_of_Copy_of_On Error Continue" doc:id="09aa0bdf-3b73-47d3-8cc6-eb4ec51547f3">
+                <ee:transform doc:name="Copy_of_Copy_of_Transform Message" doc:id="195ee510-0db6-4338-85ab-e040e4786d5c">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  'errorCode':  '500 Internal Server Error',
+  'errorDescription': 'Exception',
+  'timestamp': now()
+}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+                <set-payload value="#[payload]" doc:name="Copy_of_Copy_of_Set Payload" doc:id="dbdfddc9-3ca6-4243-9623-686e82506dca" />
+            </on-error-continue>
+        </error-handler>
+    </flow>
+    <sub-flow name="GettingRecordsDateWise" doc:id="a46ccee1-79ec-47a4-8c27-19db23c97297">
+        <ee:transform doc:name="Initializing Result JSON Object" doc:id="5a62ad0c-63d6-47ff-a72d-47824980d79d">
+            <ee:message />
+            <ee:variables>
+                <ee:set-variable variableName="jsonResultObject"><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"count":0,
+  "data": [
+    {
+      "records": 0,
+      "date": "01/03/2020"
+    }
+  ]
+}]]></ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <foreach doc:name="For Each" doc:id="cde49548-f6c1-43c0-bc0e-09b2f567ea51" collection="#[vars.dateArray]" counterVariableName="counter1">
+            <set-variable value="#[payload as Date {format: 'dd/MM/yyyy'}]" doc:name="Set Variable" doc:id="c90b550c-6346-450f-90c1-0f5c73bc7e9b" variableName="startDate" />
+            <foreach doc:name="For Each" doc:id="015cc555-9135-4825-84b1-463b51f4735d" collection="#[vars.dbResult]" counterVariableName="counter2">
+                <choice doc:name="Choice" doc:id="1d16cc61-83dc-41ef-964a-8b4ed1b7e9a8">
+                    <when expression="#[vars.startDate == payload.dateannounced  as Date {format: 'dd/MM/yyyy'}]">
+                        <set-variable value="#[0]" doc:name="Set Variable" doc:id="3dc45d27-db1c-4adf-b3cc-fa2392c64472" variableName="booleanDefault" />
+                        <foreach doc:name="For Each" doc:id="02373a2f-2685-41d6-ac57-c5b63cdc2f57" collection="#[vars.jsonResultObject.data]" counterVariableName="counter3">
+                            <choice doc:name="Choice" doc:id="a1411dcd-8fb0-4b59-8bf7-d9340a4e0e04">
+                                <when expression="#[vars.startDate == payload.date  as Date {format: 'dd/MM/yyyy'}]">
+                                    <ee:transform doc:name="Setting records" doc:id="b31bc04a-a1f4-4bf8-90a8-8650d60e6593">
+                                        <ee:message />
+                                        <ee:variables>
+                                            <ee:set-variable variableName="records"><![CDATA[%dw 2.0
+output application/java
+---
+payload.records+1]]></ee:set-variable>
+                                        </ee:variables>
+                                    </ee:transform>
+                                    <set-payload value="#[vars.jsonResultObject]" doc:name="Set Payload" doc:id="f53a5375-24e5-4340-85b7-5f09c4823365" />
+                                    <ee:transform doc:name="Adding records" doc:id="ca93f134-7254-490c-b184-584e35c5172e">
+                                        <ee:message />
+                                        <ee:variables>
+                                            <ee:set-variable variableName="jsonResultObject"><![CDATA[%dw 2.0
+output application/json
+---
+{count: vars.jsonResultObject.count + 1,
+	data: payload.data map ( datum , indexOfDatum ) -> {
+		records: if(datum.date as Date {format: 'dd/MM/yyyy'}==vars.startDate) vars.records else datum.records,
+		date: datum.date
+	}
+}]]></ee:set-variable>
+                                        </ee:variables>
+                                    </ee:transform>
+                                    <ee:transform doc:name="Copy_of_Transform Message" doc:id="95211f0a-bc6f-41fa-884b-09eab083dab8">
+                                        <ee:message />
+                                        <ee:variables>
+                                            <ee:set-variable variableName="booleanDefault"><![CDATA[%dw 2.0
+output application/java
+---
+0]]></ee:set-variable>
+                                            <ee:set-variable variableName="booleanDefault"><![CDATA[%dw 2.0
+output application/java
+---
+{
+}]]></ee:set-variable>
+                                        </ee:variables>
+                                    </ee:transform>
+                                </when>
+                                <otherwise>
+                                    <ee:transform doc:name="Transform Message" doc:id="9b3c8d4f-4d0e-4370-9bcf-2fc7c336f29f">
+                                        <ee:message />
+                                        <ee:variables>
+                                            <ee:set-variable variableName="data"><![CDATA[%dw 2.0
+output application/json
+---
+vars.jsonResultObject.data << {records:1,date:vars.startDate as Date {format: 'dd/MM/yyyy'}}]]></ee:set-variable>
+                                        </ee:variables>
+                                    </ee:transform>
+                                    <ee:transform doc:name="Transform Message" doc:id="1ae781fa-d0a7-4d6c-ad83-f29978bb1d5a">
+                                        <ee:message />
+                                        <ee:variables>
+                                            <ee:set-variable variableName="booleanDefault"><![CDATA[%dw 2.0
+output application/java
+---
+1]]></ee:set-variable>
+                                        </ee:variables>
+                                    </ee:transform>
+                                </otherwise>
+                            </choice>
+                        </foreach>
+                        <ee:transform doc:name="Transform Message" doc:id="e80b2c86-0280-4d67-8434-6dfc144f09ee">
+                            <ee:message />
+                            <ee:variables>
+                                <ee:set-variable variableName="jsonResultObject"><![CDATA[%dw 2.0
+output application/json
+---
+{count: if(vars.booleanDefault==1) vars.jsonResultObject.count + 1 else  vars.jsonResultObject.count,
+	data:if(vars.booleanDefault==1) vars.data else vars.jsonResultObject.data
+}]]></ee:set-variable>
+                            </ee:variables>
+                        </ee:transform>
+                    </when>
+                    <otherwise>
+                        <logger level="INFO" doc:name="Logger" doc:id="a43f6f64-6974-4fdc-aa08-d4ee4007925b" />
+                    </otherwise>
+                </choice>
+                <logger level="INFO" doc:name="Logger" doc:id="b443c1f6-f075-4c70-88ff-9b37445fd9d3" />
+            </foreach>
+        </foreach>
+        <set-payload value="#[vars.jsonResultObject]" doc:name="Set Payload" doc:id="574c16c1-5d87-4a29-8d2e-659633a3ac83" />
+    </sub-flow>
+    <flow name="get:\patients\getDatewiseData\(stateName)\(cityName):covidpatients-config">
+        <java:invoke-static method="makeArrayofDates()" doc:name="Copy_of_Invoke static" doc:id="262f9dc9-83ee-4861-9e57-963113b4c8b7" class="covid19proj.CovidJsonUtil" target="dateArray" />
+        <db:select doc:name="Selecting records from DB for particular state and city" doc:id="6fbfa631-cea1-433d-a402-76f74c051737" config-ref="Database_Config" target="dbResult">
+            <db:sql>select * from sys.raw_patients_data_table where statecode = :stateCode and detecteddistrict =  :city order by dateannounced asc</db:sql>
+            <db:input-parameters><![CDATA[#[{stateCode:attributes.uriParams.stateName,
+city:attributes.uriParams.cityName
+}]]]></db:input-parameters>
+        </db:select>
+        <flow-ref doc:name="Get Date Array" doc:id="0e5dd4e4-27e8-4398-bcc8-6d49ead624c7" name="GettingRecordsDateWise" />
+        <error-handler>
+            <on-error-continue enableNotifications="true" logException="true" doc:name="Copy_of_Copy_of_On Error Continue" doc:id="37279c45-2543-4472-8a62-d9b3563c8274">
+                <ee:transform doc:name="Copy_of_Copy_of_Transform Message" doc:id="6daf7aaf-5008-473a-9620-d89803213aea">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  'errorCode':  '500 Internal Server Error',
+  'errorDescription': 'Exception',
+  'timestamp': now()
+}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+                <set-payload value="#[payload]" doc:name="Copy_of_Copy_of_Set Payload" doc:id="1ba9e33c-653e-414a-8176-aa4699143758" />
+            </on-error-continue>
+        </error-handler>
+    </flow>
+    <flow name="get:\patients\getCompleteData:covidpatients-config">
+        <db:select doc:name="Select" doc:id="72b7a2da-3d81-492d-a404-28bebc8f309a" config-ref="Database_Config">
+            <db:sql>select * from sys.raw_patients_data_table</db:sql>
+        </db:select>
+        <flow-ref doc:name="Flow Reference" doc:id="5d23aa84-1d96-4599-97a8-44baaeb80e42" name="CurrentActivReoveres" />
+        <error-handler>
+            <on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="4b8a637a-792f-4d5d-a3cd-c658a8090f22">
+                <ee:transform doc:name="Copy_of_Copy_of_Copy_of_Transform Message" doc:id="60b6682f-7150-4cf8-ad3b-a44280fca903">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  'errorCode':  '500 Internal Server Error',
+  'errorDescription': 'Exception',
+  'timestamp': now()
+}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+                <set-payload value="#[payload]" doc:name="Copy_of_Copy_of_Copy_of_Set Payload" doc:id="85f33a81-c57d-4577-a1d6-973974029af5" />
+            </on-error-continue>
+        </error-handler>
+    </flow>
+    <sub-flow name="CurrentActivReoveres" doc:id="ca032e8a-4df9-474b-a111-c3cbbd7bc541">
+        <logger level="INFO" doc:name="Logger" doc:id="03b8a453-a72b-4cf8-9300-f0b4c40bf8f8" />
+        <set-variable value="#[{  &quot;Active&quot;:0,  &quot;Recovered&quot;:0,  &quot;Deceased&quot;:0,  &quot;Migrated&quot;:0 }]" doc:name="Set Variable" doc:id="6ab4d778-cd5a-40dd-9ac9-18df146e0504" variableName="resultData" />
+        <foreach doc:name="For Each" doc:id="e0feaf22-7ed1-471a-ac9a-1787bd560e91" collection="#[payload]">
+            <ee:transform doc:name="Transform Message" doc:id="97a0d3bc-7f58-44bc-8eaf-609c453e1116">
+                <ee:message />
+                <ee:variables>
+                    <ee:set-variable variableName="resultData"><![CDATA[%dw 2.0
+output application/json
+---
+{
+Active : if(payload.currentstatus=='Hospitalized') vars.resultData.Active + 1 else vars.resultData.Active,
+Recovered : if(payload.currentstatus=='Recovered') vars.resultData.Recovered + 1 else vars.resultData.Recovered,
+Deceased: if(payload.currentstatus=='Deceased') vars.resultData.Deceased + 1 else vars.resultData.Deceased,
+Migrated: if(payload.currentstatus=='Migrated') vars.resultData.Migrated + 1 else vars.resultData.Migrated
+}]]></ee:set-variable>
+                </ee:variables>
+            </ee:transform>
+            <logger level="INFO" doc:name="Logger" doc:id="66c9c4f4-75e6-4b32-a485-65947a247cc8" />
+        </foreach>
+        <set-payload value="#[vars.resultData]" doc:name="Set Payload" doc:id="05c942b3-380c-4082-aaf2-024a249e4125" />
+    </sub-flow>
+    <flow name="get:\patients\getCompleteData\(stateName)\(cityName):covidpatients-config">
+        <db:select doc:name="Copy_of_Select" doc:id="ea6fa795-1f69-4093-b210-73f87a71187c" config-ref="Database_Config">
+            <db:sql>select * from sys.raw_patients_data_table where statecode = :stateCode and detecteddistrict =  :city order by dateannounced asc</db:sql>
+            <db:input-parameters><![CDATA[#[{stateCode:attributes.uriParams.stateName,city:attributes.uriParams.cityName}]]]></db:input-parameters>
+        </db:select>
+        <flow-ref doc:name="Copy_of_Flow Reference" doc:id="fceb6ea1-a8a4-41dd-9b9c-ba662863ade2" name="CurrentActivReoveres" />
+        <error-handler>
+            <on-error-continue enableNotifications="true" logException="true" doc:name="Copy_of_On Error Continue" doc:id="fb08e652-cdd2-45d8-97c6-8ffe0d6050d9">
+                <ee:transform doc:name="Copy_of_Copy_of_Copy_of_Copy_of_Transform Message" doc:id="2eed42b3-39c5-4b2e-bdd1-f4120fc3133f">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  'errorCode':  '500 Internal Server Error',
+  'errorDescription': 'Exception',
+  'timestamp': now()
+}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+                <set-payload value="#[payload]" doc:name="Copy_of_Copy_of_Copy_of_Copy_of_Set Payload" doc:id="85fcd970-b726-48f6-95bd-6940141a9366" />
+            </on-error-continue>
+        </error-handler>
+    </flow>
+    <flow name="get:\patients\getCompleteData\(stateName):covidpatients-config">
+        <db:select doc:name="Copy_of_Copy_of_Select" doc:id="732f6ee9-0025-4a8e-86fa-925c42d0cc18" config-ref="Database_Config">
+            <db:sql>select * from sys.raw_patients_data_table where statecode = :stateCode</db:sql>
+            <db:input-parameters><![CDATA[#[{stateCode:attributes.uriParams.stateName}]]]></db:input-parameters>
+        </db:select>
+        <flow-ref doc:name="Copy_of_Copy_of_Flow Reference" doc:id="b4ed841a-7e17-4e90-9b45-83190aa9e781" name="CurrentActivReoveres" />
+        <error-handler>
+            <on-error-continue enableNotifications="true" logException="true" doc:name="Copy_of_On Error Continue" doc:id="127205db-6e1b-4d4a-9220-aa6e6a70e3e7">
+                <ee:transform doc:name="Copy_of_Copy_of_Copy_of_Copy_of_Transform Message" doc:id="b4fa343a-e392-4ea3-a014-bd592cebe513">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  'errorCode':  '500 Internal Server Error',
+  'errorDescription': 'Exception',
+  'timestamp': now()
+}]]></ee:set-payload>
+                    </ee:message>
+                </ee:transform>
+                <set-payload value="#[payload]" doc:name="Copy_of_Copy_of_Copy_of_Copy_of_Set Payload" doc:id="03e196ad-4f6f-4efa-81f0-48f2e62683ec" />
+            </on-error-continue>
+        </error-handler>
+    </flow>
+    <flow name="post:\patients\saveDataInFile:application\json:covidpatients-config">
+		<ee:transform doc:name="Transform Message" doc:id="b1e4caa5-a4f3-44fd-aba0-1ad6c09ff734" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload.Name as String ++ ' works in ' ++ payload.Organisation as String ++ ", "
+++ payload.City as String]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<jms:publish doc:name="Publish" doc:id="781ad522-1b43-4fff-aa4c-8711a4cae782" config-ref="JMS_Config" destination="inq"/>
+    </flow>
+	<flow name="covidpatientsFlow" doc:id="0b4431eb-f5ed-4616-95c0-5ff8d157f90e" >
+		<jms:listener doc:name="Listener" doc:id="2bdd0cf0-f5a2-4031-bdd8-65a1a5f3f6aa" config-ref="JMS_Config" destination="inq"/>
+		<file:write doc:name="Write" doc:id="3c5cef78-d2df-4196-b298-057cd0257230" config-ref="File_Config" path="Messages.txt" mode="APPEND">
+			<file:content ><![CDATA[#[payload ++ '\n']]]></file:content>
+		</file:write>
+	</flow>
+	<flow name="covidpatientsFlow1" doc:id="b7661377-57e9-4e32-ac14-15a8b1c5f813" >
+		<jms:consume doc:name="Consume" doc:id="4437853c-b09c-4a27-82a2-feed8926b5ad" destination="inq"/>
+		<set-payload value="#[payload]" doc:name="Set Payload" doc:id="4a9a956d-2ce6-448c-bf99-636b9268ff7a" />
+	</flow>
+</mule>

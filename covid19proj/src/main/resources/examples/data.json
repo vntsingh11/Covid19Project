@@ -1,0 +1,49 @@
+{
+	"raw_data": [
+		{
+			"agebracket": "",
+			"contractedfromwhichpatientsuspected": "",
+			"currentstatus": "Hospitalized",
+			"dateannounced": "24/05/2020",
+			"detectedcity": "",
+			"detecteddistrict": "Unassigned",
+			"detectedstate": "State Unassigned",
+			"entryid": "28223",
+			"gender": "",
+			"nationality": "",
+			"notes": "",
+			"numcases": "439",
+			"patientnumber": "57159",
+			"source1": "mohfw.gov.in",
+			"source2": "",
+			"source3": "",
+			"statecode": "UN",
+			"statepatientnumber": "",
+			"statuschangedate": "",
+			"typeoftransmission": ""
+		},
+		{
+			"agebracket": "",
+			"backupnotes": "Student from Wuhan",
+			"contractedfromwhichpatientsuspected": "",
+			"currentstatus": "Recovered",
+			"dateannounced": "02/02/2020",
+			"detectedcity": "Alappuzha",
+			"detecteddistrict": "Alappuzha",
+			"detectedstate": "Kerala",
+			"estimatedonsetdate": "",
+			"gender": "",
+			"nationality": "India",
+			"notes": "Travelled from Wuhan",
+			"numcases": "1",
+			"patientnumber": "2",
+			"source1": "https://www.indiatoday.in/india/story/kerala-reports-second-case-of-coronavirus-1642494-2020-02-02",
+			"source2": "https://weather.com/en-IN/india/news/news/2020-02-14-kerala-defeats-coronavirus-indias-three-covid-19-patients-successfully",
+			"source3": "",
+			"statecode": "KL",
+			"statepatientnumber": "KL-AL-P1",
+			"statuschangedate": "14/02/2020",
+			"typeoftransmission": "Imported"
+		}
+	]
+}
